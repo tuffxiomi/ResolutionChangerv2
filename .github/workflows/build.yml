@@ -30,7 +30,11 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -S . -B "build-${{ matrix.abi }}" -G Ninja             -DCMAKE_BUILD_TYPE=Release             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake"             -DANDROID_ABI="${{ matrix.abi }}"             -DANDROID_PLATFORM=android-28
+          cmake -S . -B "build-${{ matrix.abi }}" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI="${{ matrix.abi }}" \
+            -DANDROID_NDK="$ANDROID_NDK_ROOT" \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake"
 
       - name: Build and package
         run: |

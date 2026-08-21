@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android toolchain
+        run: |
+          sdkmanager "platforms;android-28" "ndk;28.2.13676358"
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+
+      - name: Configure
+        run: |
+          cmake -S . -B "build-${{ matrix.abi }}" -G Ninja             -DCMAKE_BUILD_TYPE=Release             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake"             -DANDROID_ABI="${{ matrix.abi }}"             -DANDROID_PLATFORM=android-28
+
+      - name: Build and package
+        run: |
+          cmake --build "build-${{ matrix.abi }}" --target verify_package -j2
+
+      - name: Upload .levipack
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResolutionChanger-${{ matrix.abi }}
+          path: build-${{ matrix.abi }}/resolutionchanger-*.levipack
+          if-no-files-found: error
